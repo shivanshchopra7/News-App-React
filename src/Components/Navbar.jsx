@@ -1,45 +1,49 @@
+import { useState, useEffect } from 'react';
 
+const Navbar = ({ setCategory }) => {
+  const [selectedCategory, setSelectedCategory] = useState("general");
 
-const Navbar = ({setCategory}) => {
+  useEffect(() => {
+    setCategory("general");
+  }, [setCategory]);
+
+  const handleCategoryClick = (category) => {
+    setCategory(category);
+    setSelectedCategory(category); // Update the selected category state
+  };
+
   return (
     <nav className="navbar navbar-expand-lg bg-body-tertiary" data-bs-theme="dark">
-    <div className="container-fluid">
-      <a className="navbar-brand" href="/"><span className="badge bg-light text-dark fs-4">News</span></a>
-      <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span className="navbar-toggler-icon"></span>
-      </button>
-      <div className="collapse navbar-collapse" id="navbarNav">
-        <ul className="navbar-nav">
-          
-          <li className="nav-item">
-            <div className="nav-link " style={{ cursor: 'pointer' }} onClick={() => setCategory("technology")}>Technology</div>
-          </li>
-
-          <li className="nav-item">
-            <div className="nav-link" style={{ cursor: 'pointer' }} onClick={() => setCategory("business")}>Business</div>
-          </li>
-
-          <li className="nav-item">
-            <div className="nav-link" style={{ cursor: 'pointer' }} onClick={() => setCategory("health")}>Health</div>
-          </li>
-
-          <li className="nav-item">
-            <div className="nav-link" style={{ cursor: 'pointer' }} onClick={() => setCategory("science")}>Science</div>
-          </li>
-
-          <li className="nav-item">
-            <div className="nav-link" style={{ cursor: 'pointer' }} onClick={() => setCategory("sports")}>Sports</div>
-          </li>
-         
-          <li className="nav-item">
-            <div className="nav-link" style={{ cursor: 'pointer' }} onClick={() => setCategory("entertainment")}>Entertainment</div>
-          </li>
-          
-        </ul>
+      <div className="container-fluid">
+       
+        <div className="collapse navbar-collapse" id="navbarNav">
+          <ul className="navbar-nav">
+            <li className="nav-item">
+              <div className={`nav-link ${selectedCategory === "general" ? "selected" : ""}`} style={{ cursor: 'pointer', backgroundColor: selectedCategory === "general" ? "red" : "", color: selectedCategory === "general" ? "white" : "" }} onClick={() => handleCategoryClick("general")}>General</div>
+            </li>
+            <li className="nav-item">
+              <div className={`nav-link ${selectedCategory === "technology" ? "selected" : ""}`} style={{ cursor: 'pointer', backgroundColor: selectedCategory === "technology" ? "red" : "", color: selectedCategory === "technology" ? "white" : "" }} onClick={() => handleCategoryClick("technology")}>Technology</div>
+            </li>
+            <li className="nav-item">
+              <div className={`nav-link ${selectedCategory === "business" ? "selected" : ""}`} style={{ cursor: 'pointer', backgroundColor: selectedCategory === "business" ? "red" : "", color: selectedCategory === "business" ? "white" : "" }} onClick={() => handleCategoryClick("business")}>Business</div>
+            </li>
+            <li className="nav-item">
+              <div className={`nav-link ${selectedCategory === "health" ? "selected" : ""}`} style={{ cursor: 'pointer', backgroundColor: selectedCategory === "health" ? "red" : "", color: selectedCategory === "health" ? "white" : "" }} onClick={() => handleCategoryClick("health")}>Health</div>
+            </li>
+            <li className="nav-item">
+              <div className={`nav-link ${selectedCategory === "science" ? "selected" : ""}`} style={{ cursor: 'pointer', backgroundColor: selectedCategory === "science" ? "red" : "", color: selectedCategory === "science" ? "white" : "" }} onClick={() => handleCategoryClick("science")}>Science</div>
+            </li>
+            <li className="nav-item">
+              <div className={`nav-link ${selectedCategory === "sports" ? "selected" : ""}`} style={{ cursor: 'pointer', backgroundColor: selectedCategory === "sports" ? "red" : "", color: selectedCategory === "sports" ? "white" : "" }} onClick={() => handleCategoryClick("sports")}>Sports</div>
+            </li>
+            <li className="nav-item">
+              <div className={`nav-link ${selectedCategory === "entertainment" ? "selected" : ""}`} style={{ cursor: 'pointer', backgroundColor: selectedCategory === "entertainment" ? "red" : "", color: selectedCategory === "entertainment" ? "white" : "" }} onClick={() => handleCategoryClick("entertainment")}>Entertainment</div>
+            </li>
+          </ul>
+        </div>
       </div>
-    </div>
-  </nav>
-  )
-}
+    </nav>
+  );
+};
 
-export default Navbar
+export default Navbar;

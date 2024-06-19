@@ -1,28 +1,200 @@
-import { useEffect } from "react";
-import { useState } from "react"
-import NewsItem from "./NewsItem";
+import React, { useEffect, useState } from 'react';
+import NewsItem from './NewsItem';
 
-const NewsBoard = ({category}) => {
-
+const NewsBoard = ({ category }) => {
   const [articles, setArticles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [retryAttempt, setRetryAttempt] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredArticles, setFilteredArticles] = useState([]);
+  const [favorites, setFavorites] = useState(() => {
+    const storedFavorites = localStorage.getItem('favorites');
+    return storedFavorites ? JSON.parse(storedFavorites) : [];
+  });
+  const [activeTab, setActiveTab] = useState('all');
+  const articlesPerPage = 12; // Number of articles per page
+
   useEffect(() => {
-    let url = `https://newsapi.org/v2/top-headlines?country=in&category=${category}&apiKey=${import.meta.env.VITE_API_KEY}`;
-    fetch(url).then(response=> response.json()).then(data=> setArticles(data.articles));
+    setLoading(true);
+    setError(null);
 
-  }, [category])
+    const fetchData = async () => {
+      let url = `https://newsapi.org/v2/top-headlines?country=in&category=${category}&apiKey=${import.meta.env.VITE_API_KEY}`;
 
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          if (response.status === 429) {
+            // Retry with exponential backoff
+            const delay = Math.pow(2, retryAttempt) * 1000; // Exponential backoff formula
+            await new Promise((resolve) => setTimeout(resolve, delay));
+            setRetryAttempt(retryAttempt + 1);
+            fetchData(); // Retry fetching data
+          } else {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+        } else {
+          const data = await response.json();
+          setArticles(data.articles);
+          setLoading(false);
+        }
+      } catch (error) {
+        setError(error.message);
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      // Cleanup effect
+    };
+  }, [category, retryAttempt]);
+
+  useEffect(() => {
+    // Function to filter articles based on search query
+    const handleSearch = () => {
+      if (!searchQuery.trim()) {
+        setFilteredArticles([]);
+      } else {
+        const filtered = articles.filter((article) =>
+          article.title.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+        setFilteredArticles(filtered);
+      }
+    };
+
+    handleSearch(); // Initial search on mount or when articles change
+  }, [searchQuery, articles]);
+
+  // Calculate total number of pages
+  const totalPages = Math.ceil((searchQuery ? filteredArticles.length : articles.length) / articlesPerPage);
+
+  // Function to handle page navigation
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  // Function to toggle favorites
+  const toggleFavorite = (article) => {
+    const index = favorites.findIndex((fav) => fav.title === article.title);
+    if (index === -1) {
+      const updatedFavorites = [...favorites, article];
+      setFavorites(updatedFavorites);
+      localStorage.setItem('favorites', JSON.stringify(updatedFavorites));
+    } else {
+      const updatedFavorites = favorites.filter((fav) => fav.title !== article.title);
+      setFavorites(updatedFavorites);
+      localStorage.setItem('favorites', JSON.stringify(updatedFavorites));
+    }
+  };
+
+  // Calculate which articles to display based on currentPage and search
+  const articlesToDisplay = searchQuery ? filteredArticles : articles;
+  const indexOfLastArticle = currentPage * articlesPerPage;
+  const indexOfFirstArticle = indexOfLastArticle - articlesPerPage;
+  const currentArticles = articlesToDisplay.slice(indexOfFirstArticle, indexOfLastArticle);
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error}</p>;
 
   return (
-    <div>
-<h2 className="text-center py-2">
-  {category.charAt(0).toUpperCase() + category.slice(1)}{' '}
-  <span className="badge bg-danger">News</span>
-</h2>
-      {articles.map((news,index)=>{
-        return <NewsItem key={index} title={news.title} description={news.description} src={news.urlToImage} url={news.url} publishedAt={news.publishedAt} />
-      })}
-    </div>
-  )
-}
+    <div className="container align-items-center">
+      <div className="d-flex justify-content-center  my-3">
+        <div className="btn-group" role="group">
+          <button
+            type="button"
+            className={`btn btn-outline-primary ${activeTab === 'all' ? 'active' : ''}`}
+            onClick={() => setActiveTab('all')}
+          >
+            All Articles
+          </button>
+          <button
+            type="button"
+            className={`btn btn-outline-primary ${activeTab === 'favorites' ? 'active' : ''}`}
+            onClick={() => setActiveTab('favorites')}
+          >
+            Favorites
+          </button>
+        </div>
+      </div>
 
-export default NewsBoard
+      {/* Search Input */}
+      <div className="input-group mb-3">
+        <input
+          type="text"
+          className="form-control"
+          placeholder="Search articles..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <button
+          className="btn btn-outline-secondary"
+          type="button"
+          onClick={() => setSearchQuery('')}
+        >
+          Clear
+        </button>
+      </div>
+
+      {/* <h2 className="text-center py-2">
+        {category.charAt(0).toUpperCase() + category.slice(1)}{' '}
+        <span className="badge bg-danger">News</span>
+      </h2> */}
+
+      {/* Conditionally render articles based on the active tab */}
+      <div className="row">
+        {activeTab === 'all'
+          ? currentArticles.map((news, index) => (
+              <div className="col-lg-4 col-md-6 col-sm-12 mb-3" key={index}>
+                <NewsItem
+                  title={news.title}
+                  description={news.description}
+                  src={news.urlToImage}
+                  url={news.url}
+                  publishedAt={news.publishedAt}
+                  isFavorite={favorites.some((fav) => fav.title === news.title)}
+                  toggleFavorite={() => toggleFavorite(news)}
+                />
+              </div>
+            ))
+          : favorites.map((news, index) => (
+              <div className="col-lg-4 col-md-6 col-sm-12 mb-3" key={index}>
+                <NewsItem
+                  title={news.title}
+                  description={news.description}
+                  src={news.urlToImage}
+                  url={news.url}
+                  publishedAt={news.publishedAt}
+                  isFavorite={true}
+                  toggleFavorite={() => toggleFavorite(news)}
+                />
+              </div>
+            ))}
+      </div>
+
+      {/* Pagination for All Articles */}
+      {activeTab === 'all' && (
+        <nav>
+          <ul className="pagination justify-content-center">
+            <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+              <button className="page-link" onClick={() => handlePageChange(currentPage - 1)}>Previous</button>
+            </li>
+            {Array.from({ length: totalPages }, (_, index) => (
+              <li key={index} className={`page-item ${currentPage === index + 1 ? 'active' : ''}`}>
+                <button className="page-link" onClick={() => handlePageChange(index + 1)}>{index + 1}</button>
+              </li>
+            ))}
+            <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+              <button className="page-link" onClick={() => handlePageChange(currentPage + 1)}>Next</button>
+            </li>
+          </ul>
+        </nav>
+      )}
+    </div>
+  );
+};
+
+export default NewsBoard;
