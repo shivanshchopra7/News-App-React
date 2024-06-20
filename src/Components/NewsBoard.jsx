@@ -5,7 +5,6 @@ const NewsBoard = ({ category }) => {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [retryAttempt, setRetryAttempt] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredArticles, setFilteredArticles] = useState([]);
@@ -26,15 +25,7 @@ const NewsBoard = ({ category }) => {
       try {
         const response = await fetch(url);
         if (!response.ok) {
-          if (response.status === 429) {
-            // Retry with exponential backoff
-            const delay = Math.pow(2, retryAttempt) * 1000; // Exponential backoff formula
-            await new Promise((resolve) => setTimeout(resolve, delay));
-            setRetryAttempt(retryAttempt + 1);
-            fetchData(); // Retry fetching data
-          } else {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-          }
+          throw new Error(`HTTP error! Status: ${response.status}`);
         } else {
           const data = await response.json();
           setArticles(data.articles);
@@ -47,11 +38,7 @@ const NewsBoard = ({ category }) => {
     };
 
     fetchData();
-
-    return () => {
-      // Cleanup effect
-    };
-  }, [category, retryAttempt]);
+  }, [category]);
 
   useEffect(() => {
     // Function to filter articles based on search query
@@ -138,11 +125,6 @@ const NewsBoard = ({ category }) => {
           Clear
         </button>
       </div>
-
-      {/* <h2 className="text-center py-2">
-        {category.charAt(0).toUpperCase() + category.slice(1)}{' '}
-        <span className="badge bg-danger">News</span>
-      </h2> */}
 
       {/* Conditionally render articles based on the active tab */}
       <div className="row">
