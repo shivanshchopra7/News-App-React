@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import NewsItem from './NewsItem';
 
+const apiKey = '6d9f2cb1e87cef1026f6d04d5cea6d88'; // Replace with your actual API key
+const baseUrl = 'https://gnews.io/api/v4';
+
 const NewsBoard = ({ category }) => {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,31 +16,36 @@ const NewsBoard = ({ category }) => {
     return storedFavorites ? JSON.parse(storedFavorites) : [];
   });
   const [activeTab, setActiveTab] = useState('all');
-  const articlesPerPage = 12; // Number of articles per page
+  const articlesPerPage = 6; // Number of articles per page
 
   useEffect(() => {
     setLoading(true);
     setError(null);
 
     const fetchData = async () => {
-      let url = `https://newsapi.org/v2/top-headlines?country=in&category=${category}&apiKey=${import.meta.env.VITE_API_KEY}`;
+      let url = `${baseUrl}/top-headlines?country=in&lang=en&max=10&apikey=${apiKey}`;
+      
+      // Adjust URL based on category
+      if (category) {
+        url += `&topic=${category}`;
+      }
 
       try {
         const response = await fetch(url);
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
-        } else {
-          const data = await response.json();
-          setArticles(data.articles);
-          setLoading(false);
         }
+        const data = await response.json();
+        setArticles(data.articles);
+        setLoading(false);
       } catch (error) {
         setError(error.message);
         setLoading(false);
       }
     };
-
+    
     fetchData();
+
   }, [category]);
 
   useEffect(() => {
@@ -134,7 +142,7 @@ const NewsBoard = ({ category }) => {
                 <NewsItem
                   title={news.title}
                   description={news.description}
-                  src={news.urlToImage}
+                  src={news.image} 
                   url={news.url}
                   publishedAt={news.publishedAt}
                   isFavorite={favorites.some((fav) => fav.title === news.title)}
@@ -147,7 +155,7 @@ const NewsBoard = ({ category }) => {
                 <NewsItem
                   title={news.title}
                   description={news.description}
-                  src={news.urlToImage}
+                  src={news.image} 
                   url={news.url}
                   publishedAt={news.publishedAt}
                   isFavorite={true}

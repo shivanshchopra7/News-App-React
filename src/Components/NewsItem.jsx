@@ -2,7 +2,7 @@ import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHeart as solidHeart } from '@fortawesome/free-solid-svg-icons';
 import { faHeart as regularHeart } from '@fortawesome/free-regular-svg-icons';
-import image from '../assets/image.jpg';
+import defaultImage from '../assets/image.jpg';
 
 const NewsItem = ({ title, description, src, url, publishedAt, isFavorite, toggleFavorite }) => {
   const maxLengthTitle = 50; // Maximum characters for title
@@ -26,7 +26,7 @@ const NewsItem = ({ title, description, src, url, publishedAt, isFavorite, toggl
   return (
     <div className="card-container d-flex flex-row justify-content-center p-0 m-0">
       <div className="card bg-dark text-light mb-3 d-inline-block my-4 mx-4 px-2 py-2" style={{ width: "365px" }}>
-        <img src={src || image} style={{ height: "200px", width: "100%", objectFit: "cover" }} className="card-img-top" alt={title} />
+        <img src={src || defaultImage} onError={(e) => { e.target.src = defaultImage }} style={{ height: "200px", width: "100%", objectFit: "cover" }} className="card-img-top" alt={title} />
         <div className="card-body" style={{ height: '250px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <p className="card-text"><small>{formatDate(publishedAt)}</small></p>
           <h5 className="card-title">{truncateText(title, maxLengthTitle)}</h5>
