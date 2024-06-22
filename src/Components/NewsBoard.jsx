@@ -23,7 +23,7 @@ const NewsBoard = ({ category }) => {
     setError(null);
 
     const fetchData = async () => {
-      let url = `${baseUrl}/top-headlines?country=in&lang=en&max=10&apikey=${apiKey}`;
+      let url = `${baseUrl}/top-headlines?country=in&lang=en&max=20&apikey=${apiKey}`;
       
       // Adjust URL based on category
       if (category) {
@@ -92,11 +92,20 @@ const NewsBoard = ({ category }) => {
   const indexOfFirstArticle = indexOfLastArticle - articlesPerPage;
   const currentArticles = articlesToDisplay.slice(indexOfFirstArticle, indexOfLastArticle);
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error: {error}</p>;
-
   return (
     <div className="container align-items-center">
+      {loading && (
+        <div className="d-flex justify-content-center my-3">
+          <div className="spinner-border" role="status">
+            <span className="sr-only"></span>
+          </div>
+        </div>
+      )}
+      {error && (
+        <div className="alert alert-danger" role="alert">
+          Error: {error}
+        </div>
+      )}
       <div className="d-flex justify-content-center  my-3">
         <div className="btn-group" role="group">
           <button
